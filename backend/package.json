@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "type": "module",
   "main": "src/server.ts",
-  "scripts": {
-  "dev": "npx nodemon --exec node --loader ts-node/esm src/server.ts",
-  "build": "tsc"
+"scripts": {
+  "build": "tsc",
+  "start": "node dist/server.js",
+  "dev": "nodemon src/server.ts"
 },
   "dependencies": {
     "bcrypt": "^5.1.1",
