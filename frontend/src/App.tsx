@@ -40,13 +40,10 @@ function App() {
       {/* Universal Sticky Header Branding */}
       <header className="bg-white border-b border-gray-200 py-4 shadow-sm mb-6">
         <div className="max-w-4xl mx-auto px-4 flex justify-between items-center">
-          <h1 className="text-xl font-extrabold text-blue-600 tracking-tight block">
+          <h1 className="text-xl font-extrabold tracking-tight text-black-800">
    Full Stack Dev Forum
 </h1>
-          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full font-medium">
-            MERN Stack Assignment Engine
-          </span>
-        </div>
+      </div>
       </header>
 
       {/* Main App Workflow View Routing */}
