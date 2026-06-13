@@ -7,7 +7,7 @@ interface PostDetailsProps {
   onBack: () => void;
 }
 
-export const PostDetails: React.FC<PostDetailsProps> = ({ postId, currentUserId, onBack }) => {
+export const PostDetails: React.FC<PostDetailsProps> = ({ postId, currentUserId }) => {
   const [data, setData] = useState<any>(null);
   const [commentInput, setCommentInput] = useState('');
   const [replyTargetId, setReplyTargetId] = useState<string | null>(null);
@@ -57,7 +57,7 @@ export const PostDetails: React.FC<PostDetailsProps> = ({ postId, currentUserId,
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    if (!confirm('Are you sure you want to delete this reply? This will claw back credits from the OP.')) return;
+    if (!confirm('Delete this comment? This will claw back credits from the OP.')) return;
     try {
       await apiRequest(`/forum/comments/${commentId}`, { method: 'DELETE' });
       loadPostData();
@@ -66,81 +66,109 @@ export const PostDetails: React.FC<PostDetailsProps> = ({ postId, currentUserId,
     }
   };
 
-  if (!data) return <div className="text-center mt-20 font-medium">Loading Thread Node Context...</div>;
+  if (!data) return <div className="pd-loading">Loading thread...</div>;
 
-  // Structural recursive helper to render comments matching parent tree chains
   const renderCommentTree = (parentId: string | null = null) => {
-    const layerNodes = data.comments.filter((c: any) => c.parentCommentId === parentId);
+    const nodes = data.comments.filter((c: any) => c.parentCommentId === parentId);
 
-    return layerNodes.map((comment: any) => (
-      <div key={comment._id} className="mt-4 border-l-2 border-gray-200 pl-4 bg-gray-50/50 p-3 rounded-r-md">
-        <div className="flex justify-between items-start text-xs text-gray-500">
-          <span>
-            Posted by <strong className="text-gray-700">{comment.author?.username || 'Anonymous'}</strong> 
-            <span className="ml-2 bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-mono">Depth {comment.depth}</span>
-          </span>
+    return nodes.map((comment: any) => (
+      <div key={comment._id} className="pd-comment-node">
+
+        {/* Meta row */}
+        <div className="pd-comment-meta">
+          <div className="pd-comment-meta-left">
+            <span className="pd-comment-author">
+              {comment.author?.username || 'Anonymous'}
+            </span>
+            <span className="pd-depth-badge">d{comment.depth}</span>
+          </div>
           {comment.author?._id === currentUserId && !comment.isDeleted && (
-            <button onClick={() => handleDeleteComment(comment._id)} className="text-red-500 hover:underline">
+            <button className="pd-delete-btn" onClick={() => handleDeleteComment(comment._id)}>
               Delete
             </button>
           )}
         </div>
-        <p className={`text-sm mt-1 text-gray-800 ${comment.isDeleted ? 'italic text-gray-400 bg-gray-100 p-1 rounded' : ''}`}>
+
+        {/* Body */}
+        <p className={`pd-comment-body${comment.isDeleted ? ' deleted' : ''}`}>
           {comment.body}
         </p>
 
-        {/* Reply Triggers */}
+        {/* Reply controls */}
         {!comment.isDeleted && (
-          <div className="mt-2">
-            {replyTargetId === comment._id ? (
-              <div className="mt-2 flex gap-2">
-                <input type="text" value={replyInput} onChange={(e) => setReplyInput(e.target.value)} className="flex-1 p-1.5 border rounded text-xs" placeholder="Write a targeted reply..." autoFocus />
-                <button onClick={() => handleAddReply(comment._id)} className="bg-blue-600 text-white px-3 py-1 rounded text-xs font-semibold">Submit</button>
-                <button onClick={() => setReplyTargetId(null)} className="bg-gray-300 text-gray-700 px-3 py-1 rounded text-xs">Cancel</button>
-              </div>
-            ) : (
-              <button onClick={() => { setReplyTargetId(comment._id); setReplyInput(''); }} className="text-xs text-blue-600 font-semibold hover:underline">
-                ↳ Reply
+          replyTargetId === comment._id ? (
+            <div className="pd-reply-form">
+              <input
+                type="text"
+                value={replyInput}
+                onChange={(e) => setReplyInput(e.target.value)}
+                placeholder="Write a reply..."
+                className="pd-reply-input"
+                autoFocus
+              />
+              <button className="pd-reply-submit" onClick={() => handleAddReply(comment._id)}>
+                Submit
               </button>
-            )}
-          </div>
+              <button className="pd-reply-cancel" onClick={() => setReplyTargetId(null)}>
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              className="pd-reply-btn"
+              onClick={() => { setReplyTargetId(comment._id); setReplyInput(''); }}
+            >
+              ↳ Reply
+            </button>
+          )
         )}
 
-        {/* Recursive Sub-tree Traversal */}
+        {/* Recursive subtree */}
         {renderCommentTree(comment._id)}
       </div>
     ));
   };
 
   return (
-    <div className="max-w-3xl mx-auto mt-8 px-4 mb-20">
-      <button onClick={onBack} className="text-sm font-semibold text-blue-600 hover:underline mb-4">← Back to Discussions</button>
-      
-      {/* Thread Title Node */}
-      <div className="bg-white p-6 rounded-lg shadow border border-gray-200 mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">{data.post.title}</h2>
-        <p className="text-gray-500 text-xs mt-1">Started by {data.post.author?.username || 'Anonymous'}</p>
-        <p className="text-gray-700 mt-4 whitespace-pre-wrap text-base border-t pt-4">{data.post.body}</p>
+    <div className="pd-page">
+
+      {/* Post */}
+      <div className="pd-post-card">
+        <h2 className="pd-post-title">{data.post.title}</h2>
+        <p className="pd-post-author">Started by {data.post.author?.username || 'Anonymous'}</p>
+        <p className="pd-post-body">{data.post.body}</p>
       </div>
 
-      {/* Root Level Submission Box */}
-      <div className="bg-white p-4 rounded-lg shadow border border-gray-200 mb-6">
-        <h3 className="text-sm font-bold text-gray-800 mb-2">Join the Conversation</h3>
-        <form onSubmit={handleAddRootComment} className="flex gap-2">
-          <input type="text" value={commentInput} onChange={(e) => setCommentInput(e.target.value)} placeholder="Type your comment..." required className="flex-1 p-2 border rounded text-sm" />
-          <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-semibold transition">Comment</button>
+      {/* Comment input */}
+      <div className="pd-comment-box">
+        <div className="pd-comment-box-title">Add a comment</div>
+        <form onSubmit={handleAddRootComment} className="pd-comment-form">
+          <input
+            type="text"
+            value={commentInput}
+            onChange={(e) => setCommentInput(e.target.value)}
+            placeholder="Share your thoughts..."
+            required
+            className="pd-comment-input"
+          />
+          <button type="submit" className="pd-comment-submit">
+            Comment
+          </button>
         </form>
       </div>
 
-      {/* Render the complete hierarchical tree */}
-      <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-        <h3 className="text-lg font-bold text-gray-800 border-b pb-2 mb-2">Responses</h3>
+      {/* Responses */}
+      <div className="pd-responses-panel">
+        <h3 className="pd-responses-title">
+          {data.comments.length} {data.comments.length === 1 ? 'response' : 'responses'}
+        </h3>
         {data.comments.length === 0 ? (
-          <p className="text-sm text-gray-500 italic py-4 text-center">No replies yet.</p>
+          <p className="pd-empty">No replies yet — be the first.</p>
         ) : (
           renderCommentTree(null)
         )}
       </div>
+
     </div>
   );
 };
