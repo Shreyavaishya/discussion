@@ -1,7 +1,7 @@
 const BASE_URL = import.meta.env.PROD 
-  ? 'https://your-backend-name.onrender.com/api' // We will get this URL from Render shortly
-  : 'http://localhost:5000/api';
-
+  ? 'https://discussion-forum-backend-jbvg.onrender.com' 
+  : 'http://localhost:5000';
+  
 export default BASE_URL;
 
 export const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
