@@ -8,7 +8,6 @@ function App() {
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Check if a user is already logged in on page refresh
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     const token = localStorage.getItem('token');
@@ -32,36 +31,59 @@ function App() {
   };
 
   if (loading) {
-    return <div className="text-center mt-20 text-gray-500 font-medium">Waking up interface...</div>;
+    return <div className="app-loading">Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-12 font-sans antialiased">
-      {/* Universal Sticky Header Branding */}
-      <header className="bg-white border-b border-gray-200 py-4 shadow-sm mb-6">
-        <div className="max-w-4xl mx-auto px-4 flex justify-between items-center">
-          <h1 className="text-xl font-extrabold tracking-tight text-black-800">
-   Full Stack Dev Forum
-</h1>
-      </div>
+    <div className="app-root">
+
+      {/* Navbar */}
+      <header className="app-navbar">
+
+        {/* Left: icon + name */}
+        <div className="app-navbar-brand" onClick={() => setSelectedPostId(null)}>
+          <div className="app-navbar-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2 3h10M2 7h6M2 11h8" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </div>
+          <span className="app-navbar-name">Full Stack Dev Forum</span>
+        </div>
+
+        {/* Right: back button + username pill */}
+        <div className="app-navbar-right">
+          {selectedPostId && (
+            <button className="app-back-btn" onClick={() => setSelectedPostId(null)}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M8 2L4 6l4 4" stroke="#555" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Back to feed
+            </button>
+          )}
+          {user && (
+            <div className="app-user-pill">{user.username}</div>
+          )}
+        </div>
       </header>
 
-      {/* Main App Workflow View Routing */}
-      {!user ? (
-        <Auth onAuthSuccess={handleAuthSuccess} />
-      ) : selectedPostId ? (
-        <PostDetails 
-          postId={selectedPostId} 
-          currentUserId={user.id} 
-          onBack={() => setSelectedPostId(null)} 
-        />
-      ) : (
-        <Dashboard 
-          user={user} 
-          onLogout={handleLogout} 
-          onSelectPost={(id) => setSelectedPostId(id)} 
-        />
-      )}
+      {/* Page content */}
+      <main>
+        {!user ? (
+          <Auth onAuthSuccess={handleAuthSuccess} />
+        ) : selectedPostId ? (
+          <PostDetails
+            postId={selectedPostId}
+            currentUserId={user.id}
+            onBack={() => setSelectedPostId(null)}
+          />
+        ) : (
+          <Dashboard
+            user={user}
+            onLogout={handleLogout}
+            onSelectPost={(id) => setSelectedPostId(id)}
+          />
+        )}
+      </main>
     </div>
   );
 }
